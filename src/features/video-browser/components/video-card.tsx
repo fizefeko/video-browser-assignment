@@ -38,11 +38,11 @@ export function VideoCard({
         priority={isPriority}
         className="bg-skeleton aspect-video w-full object-cover"
       />
-      <div className="bg-caption flex flex-1 flex-col items-center gap-0.5 px-3 py-2 text-center">
-        <p className="text-ink text-xs leading-4">{title}</p>
-        <p className="text-ink text-xs leading-4">{artist}</p>
+      <div className="bg-caption flex flex-1 flex-col items-center px-3 py-2.5 text-center">
+        <p className="text-ink text-xs leading-[1.35]">{title}</p>
+        <p className="text-ink text-xs leading-[1.35]">{artist}</p>
         <time
-          className="text-ink text-xs leading-4"
+          className="text-ink text-xs leading-[1.35]"
           dateTime={`${releaseYear}`}
         >
           {releaseYear}

@@ -24,6 +24,35 @@
 
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  /*
+   * Only opacity and transform are animated. Anything touching layout would cost
+   * cumulative layout shift, which this build is measured on.
+   */
+  --animate-card-enter: card-enter 220ms ease-out both;
+  --animate-panel-enter: panel-enter 120ms ease-out;
+}
+
+@keyframes card-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes panel-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-2px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 body {

@@ -10,7 +10,7 @@ function VideoCardSkeleton(): React.ReactNode {
   return (
     <div className="flex h-full animate-pulse flex-col overflow-hidden">
       <div className="bg-skeleton aspect-video w-full" />
-      <div className="bg-caption flex flex-1 flex-col items-center gap-1.5 px-3 py-3">
+      <div className="bg-caption flex flex-1 flex-col items-center gap-1.5 px-3 py-3.5">
         <div className="bg-skeleton h-2 w-2/3 rounded" />
         <div className="bg-skeleton h-2 w-1/2 rounded" />
         <div className="bg-skeleton h-2 w-8 rounded" />
@@ -28,7 +28,7 @@ export function VideoCardSkeletonGrid(): React.ReactNode {
   return (
     <div
       aria-hidden="true"
-      className="grid grid-cols-1 gap-1.5 sm:grid-cols-2 lg:grid-cols-3"
+      className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
     >
       {SKELETON_KEYS.map((key) => (
         <VideoCardSkeleton key={key} />

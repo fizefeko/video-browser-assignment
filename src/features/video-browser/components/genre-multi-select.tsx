@@ -73,7 +73,7 @@ export function GenreMultiSelect({
           align="start"
           sideOffset={2}
           aria-label={GENRE_PANEL_LABEL}
-          className="border-control bg-surface z-10 flex max-h-72 w-56 flex-col border shadow-md"
+          className="border-control bg-surface data-[state=open]:animate-panel-enter z-10 flex max-h-72 w-56 flex-col border shadow-md motion-reduce:animate-none"
         >
           {/*
             Only the option list scrolls. With the whole panel scrolling, the
