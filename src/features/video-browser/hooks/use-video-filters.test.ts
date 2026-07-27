@@ -76,6 +76,26 @@ describe("filtersReducer", () => {
 
     expect(state.genreIds).toEqual([5]);
   });
+
+  it("adopts a whole filter set in one transition", () => {
+    const restored = { query: "rock", year: 1991, genreIds: [8, 5] };
+
+    expect(
+      filtersReducer(INITIAL_FILTERS, {
+        type: "REPLACE_ALL",
+        filters: restored,
+      })
+    ).toEqual(restored);
+  });
+
+  it("discards previous filters when replacing", () => {
+    const state = filtersReducer(
+      { query: "old", year: 2014, genreIds: [5] },
+      { type: "REPLACE_ALL", filters: INITIAL_FILTERS }
+    );
+
+    expect(state).toEqual(INITIAL_FILTERS);
+  });
 });
 
 describe("useVideoFilters", () => {
@@ -196,6 +216,25 @@ describe("useVideoFilters", () => {
     });
   });
 
+  it("applies a whole restored filter set at once", () => {
+    const { result } = renderHook(() => useVideoFilters(videos));
+
+    act(() => {
+      result.current.replaceAll({
+        query: "beyonce",
+        year: 2008,
+        genreIds: [8],
+      });
+    });
+
+    expect(result.current.filters).toEqual({
+      query: "beyonce",
+      year: 2008,
+      genreIds: [8],
+    });
+    expect(result.current.results.map((video) => video.id)).toEqual([210001]);
+  });
+
   it("keeps action identities stable across renders", () => {
     const { result, rerender } = renderHook(() => useVideoFilters(videos));
     const before = result.current.setQuery;
@@ -203,5 +242,6 @@ describe("useVideoFilters", () => {
     rerender();
 
     expect(result.current.setQuery).toBe(before);
+    expect(result.current.replaceAll).toBe(result.current.replaceAll);
   });
 });

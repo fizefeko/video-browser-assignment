@@ -20,7 +20,8 @@ export type FilterAction =
   | { type: "SET_QUERY"; query: string }
   | { type: "SELECT_YEAR"; year: number | null }
   | { type: "TOGGLE_GENRE"; genreId: number }
-  | { type: "CLEAR_GENRES" };
+  | { type: "CLEAR_GENRES" }
+  | { type: "REPLACE_ALL"; filters: VideoFilters };
 
 function assertNever(action: never): never {
   throw new Error(`Unhandled filter action: ${JSON.stringify(action)}`);
@@ -53,6 +54,11 @@ export function filtersReducer(
 
     case "CLEAR_GENRES":
       return { ...state, genreIds: [] };
+
+    // Used to adopt filters restored from the address bar in one transition,
+    // rather than replaying them as a sequence of individual actions.
+    case "REPLACE_ALL":
+      return action.filters;
   }
 
   // No `default` branch on purpose. The switch is exhaustive over FilterAction,
@@ -72,6 +78,8 @@ export interface UseVideoFiltersResult {
   selectYear: (year: number | null) => void;
   toggleGenre: (genreId: number) => void;
   clearGenres: () => void;
+  /** Adopts a whole filter set at once, e.g. one restored from the URL. */
+  replaceAll: (filters: VideoFilters) => void;
 }
 
 export function useVideoFilters(videos: Array<Video>): UseVideoFiltersResult {
@@ -137,6 +145,8 @@ export function useVideoFilters(videos: Array<Video>): UseVideoFiltersResult {
       toggleGenre: (genreId: number) =>
         dispatch({ type: "TOGGLE_GENRE", genreId }),
       clearGenres: () => dispatch({ type: "CLEAR_GENRES" }),
+      replaceAll: (next: VideoFilters) =>
+        dispatch({ type: "REPLACE_ALL", filters: next }),
     }),
     []
   );
