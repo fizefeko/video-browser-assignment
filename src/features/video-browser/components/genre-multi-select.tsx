@@ -73,9 +73,14 @@ export function GenreMultiSelect({
           align="start"
           sideOffset={2}
           aria-label={GENRE_PANEL_LABEL}
-          className="border-control bg-surface z-10 max-h-72 w-56 overflow-y-auto border shadow-md"
+          className="border-control bg-surface z-10 flex max-h-72 w-56 flex-col border shadow-md"
         >
-          <fieldset>
+          {/*
+            Only the option list scrolls. With the whole panel scrolling, the
+            clear action sat below all 18 genres and could not be reached without
+            scrolling to the very bottom.
+          */}
+          <fieldset className="min-h-0 flex-1 overflow-y-auto">
             <legend className="sr-only">{GENRE_PANEL_LABEL}</legend>
             {genres.map((genre) => (
               <label
@@ -93,7 +98,7 @@ export function GenreMultiSelect({
             ))}
           </fieldset>
 
-          <div className="border-hairline border-t p-2">
+          <div className="border-hairline shrink-0 border-t p-2">
             <button
               type="button"
               onClick={onClear}
