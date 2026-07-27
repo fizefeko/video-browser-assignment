@@ -89,7 +89,10 @@ const config = [
       "jsx-a11y/heading-has-content": "error",
       "jsx-a11y/img-redundant-alt": "error",
       "jsx-a11y/label-has-associated-control": "error",
-      "jsx-a11y/no-redundant-roles": "error",
+      // role="list" on a <ul> is not redundant when list markers are removed:
+      // Safari/VoiceOver drop list semantics along with them, and Tailwind's
+      // preflight sets list-style: none globally.
+      "jsx-a11y/no-redundant-roles": ["error", { ul: ["list"] }],
 
       // ── General correctness ─────────────────────────────────────────────
       // warn/error stay allowed: the dataset parser reports malformed rows.
