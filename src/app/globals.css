@@ -60,6 +60,18 @@ body {
   color: var(--color-ink);
 }
 
+/**
+ * Lets the browser skip layout and paint for cards outside the viewport. With 500
+ * of them in the DOM this is most of the cost of not virtualising, without the
+ * downsides — find-in-page still works and the scroll region keeps its single tab
+ * stop. `auto` in contain-intrinsic-size means each card remembers its real height
+ * once measured, so captions wrapping to two lines do not cause jumps.
+ */
+.card-shell {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 240px;
+}
+
 /* Respect the OS setting globally — see the animation spec in the plan. */
 @media (prefers-reduced-motion: reduce) {
   *,

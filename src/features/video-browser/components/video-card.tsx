@@ -7,11 +7,15 @@ const THUMBNAIL_WIDTH = 522;
 const THUMBNAIL_HEIGHT = 292;
 
 /**
- * Matches the grid: full width on mobile, half at `sm`, a third at `lg`. Without
- * this Next would serve desktop-width images to phones for all 500 thumbnails.
+ * Mirrors the real rendered width, not the viewport fraction.
+ *
+ * The grid lives in a `max-w-5xl` container, so beyond 1024px a card stops
+ * growing and sits at a fixed 320px — (1024 − 32 padding − 32 gutters) / 3.
+ * Describing that as `33vw` overstated it on wide screens and made Next fetch
+ * roughly 422px-wide sources for a 320px slot.
  */
 const THUMBNAIL_SIZES =
-  "(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw";
+  "(min-width: 1024px) 320px, (min-width: 640px) 50vw, 100vw";
 
 interface VideoCardProps {
   video: Video;

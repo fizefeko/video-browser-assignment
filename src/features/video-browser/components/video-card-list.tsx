@@ -31,7 +31,7 @@ export function VideoCardList({ videos }: VideoCardListProps): React.ReactNode {
           // Keyed by id, so narrowing a filter leaves surviving cards mounted and
           // only genuinely new cards animate in.
           key={video.id}
-          className="animate-card-enter motion-reduce:animate-none"
+          className="card-shell animate-card-enter motion-reduce:animate-none"
           style={{
             animationDelay: `${Math.min(index, STAGGER_CAP) * STAGGER_STEP_MS}ms`,
           }}

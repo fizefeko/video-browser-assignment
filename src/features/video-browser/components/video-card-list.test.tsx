@@ -35,12 +35,14 @@ describe("VideoCardList", () => {
     expect(images).toHaveLength(videos.length);
   });
 
-  it("sets a sizes attribute so phones are not served desktop-width images", () => {
+  it("describes the real rendered width, not the viewport fraction", () => {
     render(<VideoCardList videos={videos} />);
 
+    // Past the container's max width a card is a fixed 320px, so a vw-based
+    // hint here would make Next fetch sources wider than the slot.
     expect(screen.getAllByAltText("")[0]).toHaveAttribute(
       "sizes",
-      "(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+      "(min-width: 1024px) 320px, (min-width: 640px) 50vw, 100vw"
     );
   });
 
