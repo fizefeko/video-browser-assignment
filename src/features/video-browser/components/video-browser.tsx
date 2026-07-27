@@ -134,12 +134,18 @@ export function VideoBrowser(): React.ReactNode {
         aria-busy={isLoading}
         className="focus-visible:outline-ink flex-1 overflow-y-auto focus-visible:outline-2 focus-visible:-outline-offset-2"
       >
-        <Results
-          videos={videos}
-          isLoading={isLoading}
-          error={error}
-          onRetry={retry}
-        />
+        {/*
+          Padding sits on the content, not the scroll container, so the scrollbar
+          stays flush to the edge while the cards line up with the header.
+        */}
+        <div className="px-4 pt-1 pb-4">
+          <Results
+            videos={videos}
+            isLoading={isLoading}
+            error={error}
+            onRetry={retry}
+          />
+        </div>
       </div>
     </div>
   );
