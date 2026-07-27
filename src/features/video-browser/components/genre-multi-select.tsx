@@ -75,30 +75,38 @@ export function GenreMultiSelect({
           aria-label={GENRE_PANEL_LABEL}
           // z-30 clears the sticky header (z-20); the panel opens from a trigger
           // inside it, so a lower value would paint its top edge underneath.
-          className="border-control bg-surface data-[state=open]:animate-panel-enter z-30 flex max-h-72 w-56 flex-col border shadow-md motion-reduce:animate-none"
+          // overflow-hidden is a guard, not decoration: max-height alone only caps
+          // the box, so anything that failed to shrink would spill over the cards.
+          className="border-control bg-surface data-[state=open]:animate-panel-enter z-30 flex max-h-72 w-56 flex-col overflow-hidden border shadow-md motion-reduce:animate-none"
         >
           {/*
-            Only the option list scrolls. With the whole panel scrolling, the
-            clear action sat below all 18 genres and could not be reached without
-            scrolling to the very bottom.
+            Only the option list scrolls, so the clear action below stays visible
+            instead of sitting under all 18 genres.
+
+            The scroll container is a plain div rather than the fieldset itself: a
+            fieldset has its own UA layout rules and is unreliable as a flex item,
+            so sizing the scroll area on it let the list escape the panel. The
+            fieldset stays for the grouping semantics and does no layout.
           */}
-          <fieldset className="min-h-0 flex-1 overflow-y-auto">
-            <legend className="sr-only">{GENRE_PANEL_LABEL}</legend>
-            {genres.map((genre) => (
-              <label
-                key={genre.id}
-                className="hover:bg-field flex min-h-9 cursor-pointer items-center gap-2 px-3 py-2 text-xs"
-              >
-                <input
-                  type="checkbox"
-                  checked={selected.has(genre.id)}
-                  onChange={() => onToggle(genre.id)}
-                  className="accent-ink size-4 shrink-0"
-                />
-                <span className="text-ink">{genre.name}</span>
-              </label>
-            ))}
-          </fieldset>
+          <div className="min-h-0 flex-1 overflow-y-auto">
+            <fieldset>
+              <legend className="sr-only">{GENRE_PANEL_LABEL}</legend>
+              {genres.map((genre) => (
+                <label
+                  key={genre.id}
+                  className="hover:bg-field flex min-h-9 cursor-pointer items-center gap-2 px-3 py-2 text-xs"
+                >
+                  <input
+                    type="checkbox"
+                    checked={selected.has(genre.id)}
+                    onChange={() => onToggle(genre.id)}
+                    className="accent-ink size-4 shrink-0"
+                  />
+                  <span className="text-ink">{genre.name}</span>
+                </label>
+              ))}
+            </fieldset>
+          </div>
 
           <div className="border-hairline shrink-0 border-t p-2">
             <button
