@@ -23,7 +23,8 @@ function toVideo(raw: RawVideo, genreNameById: Map<number, string>): Video {
     genreId: raw.genre_id,
     genreName: genreNameById.get(raw.genre_id) ?? null,
     imageUrl: raw.image_url,
-    searchIndex: normalizeForSearch(`${raw.artist} ${raw.title}`),
+    searchArtist: normalizeForSearch(raw.artist),
+    searchTitle: normalizeForSearch(raw.title),
   };
 }
 

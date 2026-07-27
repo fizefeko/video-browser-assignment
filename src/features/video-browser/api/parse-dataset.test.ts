@@ -46,12 +46,22 @@ describe("parseDataset", () => {
     expect(orphan?.genreName).toBeNull();
   });
 
-  it("precomputes an accent-folded search index over artist and title", () => {
+  it("precomputes accent-folded copies of the two searchable fields", () => {
     const { videos } = parseDataset(datasetFixture);
     const beyonce = videos.find((video) => video.id === 210001);
 
-    expect(beyonce?.searchIndex).toBe(
-      "beyonce single ladies (put a ring on it)"
+    expect(beyonce?.searchArtist).toBe("beyonce");
+    expect(beyonce?.searchTitle).toBe("single ladies (put a ring on it)");
+  });
+
+  it("keeps artist and title separate so a query cannot straddle them", () => {
+    const { videos } = parseDataset(datasetFixture);
+    const allIn = videos.find((video) => video.id === 501437);
+
+    expect(allIn?.searchArtist).toBe("pants velour");
+    expect(allIn?.searchTitle).toBe("all in");
+    expect(`${allIn?.searchArtist}${allIn?.searchTitle}`).not.toContain(
+      "velour all"
     );
   });
 

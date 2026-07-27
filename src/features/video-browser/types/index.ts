@@ -17,10 +17,16 @@ export interface Video {
   genreName: string | null;
   imageUrl: string;
   /**
-   * Precomputed `normalizeForSearch(artist + title)` so a keystroke never
-   * re-normalises 500 rows.
+   * Accent-folded, lowercased copies of the two searchable fields, precomputed so
+   * a keystroke never re-normalises 500 rows.
+   *
+   * Kept as two fields rather than one concatenation on purpose: the brief filters
+   * by artist OR title, and a single joined string would also match a query
+   * straddling the boundary — "velour all" would hit "Pants Velour" / "All In"
+   * even though neither field contains it.
    */
-  searchIndex: string;
+  searchArtist: string;
+  searchTitle: string;
 }
 
 /** A row that failed validation, kept for logging rather than thrown away silently. */
