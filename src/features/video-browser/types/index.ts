@@ -42,6 +42,16 @@ export interface VideosResponse {
   genres: Genre[];
 }
 
+/** The three filters, combined with AND logic. */
+export interface VideoFilters {
+  /** Free text matched against artist or title. Empty means no text filter. */
+  query: string;
+  /** `null` means all years. */
+  year: number | null;
+  /** Empty means all genres; several ids are OR-ed against each other. */
+  genreIds: number[];
+}
+
 /**
  * The choices offered by the year and genre controls. Derived from a set of
  * videos rather than from the raw `genres` table, so an option can never produce

@@ -1,14 +1,21 @@
 "use client";
 
+import { useMemo, useState } from "react";
+
 import {
   EMPTY_STATE_MESSAGE,
   EmptyState,
 } from "~/features/video-browser/components/empty-state";
 import { ErrorState } from "~/features/video-browser/components/error-state";
+import { HeaderPanel } from "~/features/video-browser/components/header-panel";
+import { SkipLink } from "~/features/video-browser/components/skip-link";
 import { VideoCardList } from "~/features/video-browser/components/video-card-list";
 import { VideoCardSkeletonGrid } from "~/features/video-browser/components/video-card-skeleton-grid";
 import { useVideos } from "~/features/video-browser/hooks/use-videos";
-import type { Video } from "~/features/video-browser/types";
+import type { Video, VideoFilters } from "~/features/video-browser/types";
+import { deriveFilterOptions } from "~/features/video-browser/utils/derive-filter-options";
+
+const RESULTS_REGION_ID = "video-results";
 
 const LOADING_ANNOUNCEMENT = "Loading videos";
 
@@ -78,19 +85,48 @@ function Results({
 export function VideoBrowser(): React.ReactNode {
   const { videos, isLoading, error, retry } = useVideos();
 
+  // Interim home for the filter values so the controls are operable. The reducer
+  // that owns them arrives with the filtering logic itself.
+  const [filters, setFilters] = useState<VideoFilters>({
+    query: "",
+    year: null,
+    genreIds: [],
+  });
+
+  const options = useMemo(() => deriveFilterOptions(videos), [videos]);
+
   return (
-    <div className="mx-auto flex h-dvh w-full max-w-5xl flex-col">
-      <header className="border-hairline shrink-0 border-b px-4 py-4">
-        <h1 className="text-ink text-center text-xl font-bold tracking-tight">
-          Video Browser
-        </h1>
-      </header>
+    <div className="relative mx-auto flex h-dvh w-full max-w-5xl flex-col">
+      <SkipLink targetId={RESULTS_REGION_ID}>Skip to results</SkipLink>
+
+      <HeaderPanel
+        query={filters.query}
+        year={filters.year}
+        selectedGenreIds={filters.genreIds}
+        options={options}
+        onQueryChange={(query) =>
+          setFilters((current) => ({ ...current, query }))
+        }
+        onYearChange={(year) => setFilters((current) => ({ ...current, year }))}
+        onGenreToggle={(genreId) =>
+          setFilters((current) => ({
+            ...current,
+            genreIds: current.genreIds.includes(genreId)
+              ? current.genreIds.filter((id) => id !== genreId)
+              : [...current.genreIds, genreId],
+          }))
+        }
+        onGenresClear={() =>
+          setFilters((current) => ({ ...current, genreIds: [] }))
+        }
+      />
 
       <p aria-live="polite" aria-atomic="true" className="sr-only">
         {getAnnouncement(isLoading, Boolean(error), videos.length)}
       </p>
 
       <div
+        id={RESULTS_REGION_ID}
         // A scroll container is not keyboard-scrollable unless it can take focus.
         tabIndex={0}
         role="region"

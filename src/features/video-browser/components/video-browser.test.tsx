@@ -58,6 +58,101 @@ describe("VideoBrowser", () => {
     expect(region).toHaveAttribute("tabindex", "0");
   });
 
+  describe("filter controls", () => {
+    it("offers a skip link straight to the results", async () => {
+      const user = userEvent.setup();
+      givenVideosState();
+      render(<VideoBrowser />);
+
+      await user.tab();
+
+      const skipLink = screen.getByRole("link", { name: "Skip to results" });
+      const region = screen.getByRole("region", { name: "Video results" });
+
+      expect(skipLink).toHaveFocus();
+      expect(skipLink).toHaveAttribute("href", `#${region.id}`);
+    });
+
+    it("builds the year options from the loaded videos", () => {
+      givenVideosState();
+      render(<VideoBrowser />);
+
+      // The four fixture years, plus the clear option.
+      expect(screen.getAllByRole("option")).toHaveLength(5);
+    });
+
+    it("offers only genres that some video actually uses", async () => {
+      const user = userEvent.setup();
+      givenVideosState();
+      render(<VideoBrowser />);
+
+      await user.click(screen.getByRole("button", { expanded: false }));
+
+      expect(
+        screen.getAllByRole("checkbox").map((box) => box.getAttribute("name"))
+      ).toHaveLength(2);
+    });
+
+    it("keeps what the user typed", async () => {
+      const user = userEvent.setup();
+      givenVideosState();
+      render(<VideoBrowser />);
+
+      await user.type(screen.getByRole("searchbox"), "Beyonce");
+
+      expect(screen.getByRole("searchbox")).toHaveValue("Beyonce");
+    });
+
+    it("keeps the chosen year", async () => {
+      const user = userEvent.setup();
+      givenVideosState();
+      render(<VideoBrowser />);
+
+      await user.selectOptions(screen.getByRole("combobox"), "2008");
+
+      expect(screen.getByRole("combobox")).toHaveValue("2008");
+    });
+
+    it("accumulates genre selections instead of replacing them", async () => {
+      const user = userEvent.setup();
+      givenVideosState();
+      render(<VideoBrowser />);
+
+      await user.click(screen.getByRole("button", { expanded: false }));
+      await user.click(screen.getByRole("checkbox", { name: "Pop" }));
+      await user.click(screen.getByRole("checkbox", { name: "Rock" }));
+
+      expect(screen.getByRole("checkbox", { name: "Pop" })).toBeChecked();
+      expect(screen.getByRole("checkbox", { name: "Rock" })).toBeChecked();
+    });
+
+    it("cannot select the same genre twice", async () => {
+      const user = userEvent.setup();
+      givenVideosState();
+      render(<VideoBrowser />);
+
+      await user.click(screen.getByRole("button", { expanded: false }));
+      await user.click(screen.getByRole("checkbox", { name: "Pop" }));
+      await user.click(screen.getByRole("checkbox", { name: "Pop" }));
+
+      expect(screen.getByRole("checkbox", { name: "Pop" })).not.toBeChecked();
+    });
+
+    it("clears every genre selection at once", async () => {
+      const user = userEvent.setup();
+      givenVideosState();
+      render(<VideoBrowser />);
+
+      await user.click(screen.getByRole("button", { expanded: false }));
+      await user.click(screen.getByRole("checkbox", { name: "Pop" }));
+      await user.click(screen.getByRole("checkbox", { name: "Rock" }));
+      await user.click(screen.getByRole("button", { name: "Clear selection" }));
+
+      expect(screen.getByRole("checkbox", { name: "Pop" })).not.toBeChecked();
+      expect(screen.getByRole("checkbox", { name: "Rock" })).not.toBeChecked();
+    });
+  });
+
   describe("while loading", () => {
     it("marks the region busy and announces progress", () => {
       givenVideosState({ isLoading: true, videos: [] });
