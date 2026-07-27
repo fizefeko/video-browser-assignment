@@ -1,0 +1,43 @@
+export interface Genre {
+  id: number;
+  name: string;
+}
+
+/**
+ * A video normalised for rendering: camelCased, genre resolved, title guaranteed
+ * to be a string. Produced only by `parseDataset` — nothing else constructs one.
+ */
+export interface Video {
+  id: number;
+  artist: string;
+  title: string;
+  releaseYear: number;
+  genreId: number;
+  /** `null` for the 166 rows whose `genre_id` has no entry in `genres`. */
+  genreName: string | null;
+  imageUrl: string;
+  /**
+   * Precomputed `normalizeForSearch(artist + title)` so a keystroke never
+   * re-normalises 500 rows.
+   */
+  searchIndex: string;
+}
+
+/** A row that failed validation, kept for logging rather than thrown away silently. */
+export interface RejectedRow {
+  collection: "genres" | "videos";
+  index: number;
+  reason: string;
+}
+
+export interface ParsedDataset {
+  videos: Video[];
+  genres: Genre[];
+  rejected: RejectedRow[];
+}
+
+/** The `GET /api/videos` body. `rejected` is diagnostic and stays server-side. */
+export interface VideosResponse {
+  videos: Video[];
+  genres: Genre[];
+}
