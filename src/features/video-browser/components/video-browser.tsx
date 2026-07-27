@@ -103,7 +103,9 @@ export function VideoBrowser(): React.ReactNode {
   useFilterUrlSync(filters);
 
   return (
-    <div className="relative mx-auto w-full max-w-5xl">
+    // No max width here: the header is full-bleed so its rule spans the viewport,
+    // and the results below re-apply the shared measure.
+    <div className="relative">
       <SkipLink targetId={RESULTS_REGION_ID}>Skip to results</SkipLink>
 
       <HeaderPanel
@@ -139,7 +141,7 @@ export function VideoBrowser(): React.ReactNode {
         // scroll-mt clears the sticky header: without it, following the skip link
         // scrolls this region to the very top of the viewport and the header covers
         // the first row of cards.
-        className="focus-visible:outline-ink scroll-mt-32 focus-visible:outline-2 focus-visible:-outline-offset-2"
+        className="focus-visible:outline-ink mx-auto w-full max-w-5xl scroll-mt-32 focus-visible:outline-2 focus-visible:-outline-offset-2"
       >
         <div className="px-4 pt-4 pb-8">
           <Results

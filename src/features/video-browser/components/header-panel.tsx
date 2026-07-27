@@ -33,27 +33,31 @@ export function HeaderPanel({
 }: HeaderPanelProps): React.ReactNode {
   return (
     <header
-      // Sticks while the page scrolls. The background must be opaque or cards
+      // Full-bleed so the rule underneath runs the whole width of the viewport;
+      // sticks while the page scrolls. The background must be opaque or cards
       // would show through as they pass underneath.
-      className="border-hairline bg-surface sticky top-0 z-20 border-b px-4 pt-5 pb-4"
+      className="border-hairline bg-surface sticky top-0 z-20 border-b"
     >
-      <h1 className="text-ink text-center text-xl font-bold tracking-tight">
-        {APP_TITLE}
-      </h1>
+      {/* Content stays centred on the same measure as the grid below it. */}
+      <div className="mx-auto w-full max-w-5xl px-4 pt-5 pb-4">
+        <h1 className="text-ink text-center text-xl font-bold tracking-tight">
+          {APP_TITLE}
+        </h1>
 
-      <div className="mt-4 flex flex-col items-stretch justify-center gap-2 sm:flex-row sm:items-center">
-        <VideoSearchInput value={query} onChange={onQueryChange} />
-        <YearSelect
-          years={options.years}
-          value={year}
-          onChange={onYearChange}
-        />
-        <GenreMultiSelect
-          genres={options.genres}
-          selectedIds={selectedGenreIds}
-          onToggle={onGenreToggle}
-          onClear={onGenresClear}
-        />
+        <div className="mt-4 flex flex-col items-stretch justify-center gap-2 sm:flex-row sm:items-center">
+          <VideoSearchInput value={query} onChange={onQueryChange} />
+          <YearSelect
+            years={options.years}
+            value={year}
+            onChange={onYearChange}
+          />
+          <GenreMultiSelect
+            genres={options.genres}
+            selectedIds={selectedGenreIds}
+            onToggle={onGenreToggle}
+            onClear={onGenresClear}
+          />
+        </div>
       </div>
     </header>
   );
