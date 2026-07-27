@@ -9,6 +9,10 @@ import { HeaderPanel } from "~/features/video-browser/components/header-panel";
 import { SkipLink } from "~/features/video-browser/components/skip-link";
 import { VideoCardList } from "~/features/video-browser/components/video-card-list";
 import { VideoCardSkeletonGrid } from "~/features/video-browser/components/video-card-skeleton-grid";
+import {
+  useFilterUrlSync,
+  useRestoreFiltersFromUrl,
+} from "~/features/video-browser/hooks/use-filter-url";
 import { useVideoFilters } from "~/features/video-browser/hooks/use-video-filters";
 import { useVideos } from "~/features/video-browser/hooks/use-videos";
 import type { Video } from "~/features/video-browser/types";
@@ -90,7 +94,13 @@ export function VideoBrowser(): React.ReactNode {
     selectYear,
     toggleGenre,
     clearGenres,
+    replaceAll,
   } = useVideoFilters(videos);
+
+  // Deep-linked filters are adopted once on mount, then mirrored back as they
+  // change, so a filtered view can be shared and survives a reload.
+  useRestoreFiltersFromUrl(replaceAll);
+  useFilterUrlSync(filters);
 
   return (
     <div className="relative mx-auto flex h-dvh w-full max-w-5xl flex-col">

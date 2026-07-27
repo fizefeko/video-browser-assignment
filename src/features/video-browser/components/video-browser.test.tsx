@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe } from "jest-axe";
 
@@ -27,6 +27,14 @@ function givenVideosState(overrides: Partial<UseVideosResult> = {}): void {
     ...overrides,
   });
 }
+
+function goTo(search: string): void {
+  window.history.replaceState(null, "", `/${search}`);
+}
+
+beforeEach(() => {
+  goTo("");
+});
 
 function getLiveRegion(): HTMLElement {
   const region = document.querySelector("[aria-live='polite']");
@@ -291,6 +299,59 @@ describe("VideoBrowser", () => {
       expect(
         screen.getAllByRole("option").map((option) => option.textContent)
       ).toContain("2014");
+    });
+
+    it("reflects the filters in the address bar", async () => {
+      const user = userEvent.setup();
+      givenVideosState();
+      render(<VideoBrowser />);
+
+      await user.type(screen.getByRole("searchbox"), "beyonce");
+      await user.selectOptions(screen.getByRole("combobox"), "2008");
+
+      expect(window.location.search).toBe("?q=beyonce&year=2008");
+    });
+
+    it("clears the address bar again when filters are removed", async () => {
+      const user = userEvent.setup();
+      givenVideosState();
+      render(<VideoBrowser />);
+
+      await user.selectOptions(screen.getByRole("combobox"), "2014");
+      expect(window.location.search).toBe("?year=2014");
+
+      await user.selectOptions(screen.getByRole("combobox"), "");
+
+      expect(window.location.search).toBe("");
+    });
+
+    it("applies filters supplied by a deep link", async () => {
+      goTo("?q=beyonce&year=2008&genres=8");
+      givenVideosState();
+      render(<VideoBrowser />);
+
+      await waitFor(() => {
+        expect(screen.getByRole("searchbox")).toHaveValue("beyonce");
+      });
+      expect(screen.getByRole("combobox")).toHaveValue("2008");
+      expect(screen.getByRole("button", { expanded: false })).toHaveTextContent(
+        "1 genre selected"
+      );
+      expect(screen.getAllByRole("listitem")).toHaveLength(1);
+    });
+
+    it("ignores a deep-linked genre that does not exist, without crashing", async () => {
+      goTo("?genres=999999");
+      givenVideosState();
+      render(<VideoBrowser />);
+
+      const region = screen.getByRole("region", { name: "Video results" });
+
+      await waitFor(() => {
+        expect(
+          within(region).getByText("No videos were found")
+        ).toBeInTheDocument();
+      });
     });
 
     it("has no accessibility violations with the empty state showing", async () => {
