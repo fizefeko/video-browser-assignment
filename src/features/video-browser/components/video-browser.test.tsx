@@ -350,6 +350,16 @@ describe("VideoBrowser", () => {
       expect(getLiveRegion()).toHaveTextContent("");
     });
 
+    it("falls back to a readable message when the error carries none", () => {
+      // Network failures sometimes surface as an Error with an empty message.
+      givenVideosState({ error: new Error(""), videos: [] });
+      render(<VideoBrowser />);
+
+      expect(screen.getByRole("alert")).toHaveTextContent(
+        "Could not load videos. Please try again."
+      );
+    });
+
     it("has no accessibility violations", async () => {
       givenVideosState({ error: new Error("Upstream is down"), videos: [] });
       const { container } = render(<VideoBrowser />);

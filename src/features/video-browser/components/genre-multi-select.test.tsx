@@ -5,6 +5,7 @@ import { axe } from "jest-axe";
 import {
   GENRE_PLACEHOLDER,
   GenreMultiSelect,
+  formatSelectionLabel,
 } from "~/features/video-browser/components/genre-multi-select";
 import type { Genre } from "~/features/video-browser/types";
 
@@ -38,6 +39,17 @@ function renderSelect(selectedIds: Array<number> = []): Handlers {
 function getTrigger(): HTMLElement {
   return screen.getByRole("button", { expanded: false });
 }
+
+describe("formatSelectionLabel", () => {
+  it.each([
+    [0, GENRE_PLACEHOLDER],
+    [1, "1 genre selected"],
+    [2, "2 genres selected"],
+    [18, "18 genres selected"],
+  ])("describes %i selections as %s", (count, expected) => {
+    expect(formatSelectionLabel(count)).toBe(expected);
+  });
+});
 
 describe("GenreMultiSelect", () => {
   it("starts collapsed showing the placeholder", () => {

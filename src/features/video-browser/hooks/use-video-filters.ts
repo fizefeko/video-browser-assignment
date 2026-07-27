@@ -22,6 +22,10 @@ export type FilterAction =
   | { type: "TOGGLE_GENRE"; genreId: number }
   | { type: "CLEAR_GENRES" };
 
+function assertNever(action: never): never {
+  throw new Error(`Unhandled filter action: ${JSON.stringify(action)}`);
+}
+
 /**
  * One reducer for all three filters rather than three pieces of state. Several
  * transitions touch more than one field, and a pure function is testable without
@@ -49,10 +53,12 @@ export function filtersReducer(
 
     case "CLEAR_GENRES":
       return { ...state, genreIds: [] };
-
-    default:
-      return state;
   }
+
+  // No `default` branch on purpose. The switch is exhaustive over FilterAction,
+  // so adding an action without handling it fails to compile here instead of
+  // silently returning the previous state at runtime.
+  return assertNever(action);
 }
 
 export interface UseVideoFiltersResult {
