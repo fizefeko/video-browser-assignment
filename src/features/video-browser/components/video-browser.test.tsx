@@ -53,6 +53,27 @@ beforeEach(() => {
   goTo("");
 });
 
+/** The year control is a Radix select: open it, then pick an option. */
+async function chooseYear(
+  user: ReturnType<typeof userEvent.setup>,
+  name: string
+): Promise<void> {
+  await user.click(screen.getByRole("combobox"));
+  await user.click(screen.getByRole("option", { name }));
+}
+
+async function getYearOptions(
+  user: ReturnType<typeof userEvent.setup>
+): Promise<Array<string | null>> {
+  await user.click(screen.getByRole("combobox"));
+  const labels = screen
+    .getAllByRole("option")
+    .map((option) => option.textContent);
+  await user.keyboard("{Escape}");
+
+  return labels;
+}
+
 function getLiveRegion(): HTMLElement {
   const region = document.querySelector("[aria-live='polite']");
 
@@ -118,12 +139,13 @@ describe("VideoBrowser", () => {
       expect(skipLink).toHaveAttribute("href", `#${region.id}`);
     });
 
-    it("builds the year options from the loaded videos", () => {
+    it("builds the year options from the loaded videos", async () => {
+      const user = userEvent.setup();
       givenVideosState();
       render(<VideoBrowser />);
 
       // The four fixture years, plus the clear option.
-      expect(screen.getAllByRole("option")).toHaveLength(5);
+      expect(await getYearOptions(user)).toHaveLength(5);
     });
 
     it("offers only genres that some video actually uses", async () => {
@@ -153,9 +175,9 @@ describe("VideoBrowser", () => {
       givenVideosState();
       render(<VideoBrowser />);
 
-      await user.selectOptions(screen.getByRole("combobox"), "2008");
+      await chooseYear(user, "2008");
 
-      expect(screen.getByRole("combobox")).toHaveValue("2008");
+      expect(screen.getByRole("combobox")).toHaveTextContent("2008");
     });
 
     it("accumulates genre selections instead of replacing them", async () => {
@@ -334,7 +356,7 @@ describe("VideoBrowser", () => {
       givenVideosState();
       render(<VideoBrowser />);
 
-      await user.selectOptions(screen.getByRole("combobox"), "2014");
+      await chooseYear(user, "2014");
 
       expect(screen.getAllByRole("listitem")).toHaveLength(1);
       expect(screen.getByText("All In")).toBeInTheDocument();
@@ -361,7 +383,7 @@ describe("VideoBrowser", () => {
       render(<VideoBrowser />);
 
       await user.type(screen.getByRole("searchbox"), "beyonce");
-      await user.selectOptions(screen.getByRole("combobox"), "2008");
+      await chooseYear(user, "2008");
       await user.click(screen.getByRole("button", { expanded: false }));
       await user.click(screen.getByRole("checkbox", { name: "Rock" }));
       await user.keyboard("{Escape}");
@@ -376,7 +398,7 @@ describe("VideoBrowser", () => {
 
       // Year first: typing first would narrow 2014 out of the options entirely,
       // which is the dynamic-options behaviour rather than a contradiction.
-      await user.selectOptions(screen.getByRole("combobox"), "2014");
+      await chooseYear(user, "2014");
       await user.type(screen.getByRole("searchbox"), "beyonce");
 
       expect(screen.queryByRole("listitem")).not.toBeInTheDocument();
@@ -409,9 +431,7 @@ describe("VideoBrowser", () => {
 
       await user.type(screen.getByRole("searchbox"), "beyonce");
 
-      expect(
-        screen.getAllByRole("option").map((option) => option.textContent)
-      ).toEqual(["All years", "2008"]);
+      expect(await getYearOptions(user)).toEqual(["All years", "2008"]);
     });
 
     it("keeps a chosen year listed once the search excludes it", async () => {
@@ -419,14 +439,12 @@ describe("VideoBrowser", () => {
       givenVideosState();
       render(<VideoBrowser />);
 
-      await user.selectOptions(screen.getByRole("combobox"), "2014");
+      await chooseYear(user, "2014");
       await user.type(screen.getByRole("searchbox"), "beyonce");
 
-      // The select must never hold a value it does not offer.
-      expect(screen.getByRole("combobox")).toHaveValue("2014");
-      expect(
-        screen.getAllByRole("option").map((option) => option.textContent)
-      ).toContain("2014");
+      // The control must never hold a value it does not offer.
+      expect(screen.getByRole("combobox")).toHaveTextContent("2014");
+      expect(await getYearOptions(user)).toContain("2014");
     });
 
     it("reflects the filters in the address bar", async () => {
@@ -435,7 +453,7 @@ describe("VideoBrowser", () => {
       render(<VideoBrowser />);
 
       await user.type(screen.getByRole("searchbox"), "beyonce");
-      await user.selectOptions(screen.getByRole("combobox"), "2008");
+      await chooseYear(user, "2008");
 
       expect(window.location.search).toBe("?q=beyonce&year=2008");
     });
@@ -445,10 +463,10 @@ describe("VideoBrowser", () => {
       givenVideosState();
       render(<VideoBrowser />);
 
-      await user.selectOptions(screen.getByRole("combobox"), "2014");
+      await chooseYear(user, "2014");
       expect(window.location.search).toBe("?year=2014");
 
-      await user.selectOptions(screen.getByRole("combobox"), "");
+      await chooseYear(user, "All years");
 
       expect(window.location.search).toBe("");
     });
@@ -461,7 +479,7 @@ describe("VideoBrowser", () => {
       await waitFor(() => {
         expect(screen.getByRole("searchbox")).toHaveValue("beyonce");
       });
-      expect(screen.getByRole("combobox")).toHaveValue("2008");
+      expect(screen.getByRole("combobox")).toHaveTextContent("2008");
       expect(screen.getByRole("button", { expanded: false })).toHaveTextContent(
         "1 genre selected"
       );

@@ -78,12 +78,15 @@ describe("HeaderPanel", () => {
     renderPanel({ query: "Beyonce", year: 2008, selectedGenreIds: [5, 8] });
 
     expect(screen.getByRole("searchbox")).toHaveValue("Beyonce");
-    expect(screen.getByRole("combobox")).toHaveValue("2008");
+    expect(screen.getByRole("combobox")).toHaveTextContent("2008");
     expect(screen.getByRole("button")).toHaveTextContent("2 genres selected");
   });
 
-  it("offers the year options it is given", () => {
+  it("offers the year options it is given", async () => {
+    const user = userEvent.setup();
     renderPanel();
+
+    await user.click(screen.getByRole("combobox"));
 
     // Three years plus the clear option.
     expect(screen.getAllByRole("option")).toHaveLength(4);
@@ -102,7 +105,8 @@ describe("HeaderPanel", () => {
     const user = userEvent.setup();
     const { onYearChange } = renderPanel();
 
-    await user.selectOptions(screen.getByRole("combobox"), "2014");
+    await user.click(screen.getByRole("combobox"));
+    await user.click(screen.getByRole("option", { name: "2014" }));
 
     expect(onYearChange).toHaveBeenCalledWith(2014);
   });
