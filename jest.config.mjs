@@ -10,6 +10,12 @@ const createJestConfig = nextJest({ dir: "./" });
 const config = {
   setupFilesAfterEnv: ["<rootDir>/jest.setup.ts"],
   testEnvironment: "jsdom",
+  // `next/jest` resolves the `~/*` alias through the SWC transform, which rewrites
+  // import specifiers but not the string passed to `jest.mock()`. Mapping it here
+  // makes the alias work in both.
+  moduleNameMapper: {
+    "^~/(.*)$": "<rootDir>/src/$1",
+  },
   testMatch: ["<rootDir>/src/**/*.test.{ts,tsx}"],
   clearMocks: true,
   restoreMocks: true,
