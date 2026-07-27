@@ -11,8 +11,16 @@
   --color-ink: #181818;
   --color-ink-muted: #4a4a4a;
   --color-field: #f1f1f1;
-  --color-hairline: #e5e5e5;
   --color-skeleton: #e4e4e4;
+
+  /*
+   * Two border colours on purpose. `hairline` is decorative — the rule under the
+   * header — and is exempt from contrast rules. `control` outlines the filter
+   * inputs, which WCAG 1.4.11 requires to reach 3:1 against what surrounds them,
+   * so it is darker than the mockup's hairline: 3.45:1 on white, 3.06:1 on field.
+   */
+  --color-hairline: #e5e5e5;
+  --color-control: #8a8a8a;
 
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
