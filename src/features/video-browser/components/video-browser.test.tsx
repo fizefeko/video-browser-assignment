@@ -153,6 +153,157 @@ describe("VideoBrowser", () => {
     });
   });
 
+  describe("filtering", () => {
+    it("narrows the grid as the user types", async () => {
+      const user = userEvent.setup();
+      givenVideosState();
+      render(<VideoBrowser />);
+
+      await user.type(screen.getByRole("searchbox"), "beyonce");
+
+      expect(screen.getAllByRole("listitem")).toHaveLength(1);
+      expect(
+        screen.getByText("Single Ladies (Put a Ring on It)")
+      ).toBeInTheDocument();
+    });
+
+    it("matches on artist as well as title", async () => {
+      const user = userEvent.setup();
+      givenVideosState();
+      render(<VideoBrowser />);
+
+      await user.type(screen.getByRole("searchbox"), "Pants Velour");
+
+      expect(screen.getAllByRole("listitem")).toHaveLength(1);
+      expect(screen.getByText("All In")).toBeInTheDocument();
+    });
+
+    it("shows the empty state when nothing matches", async () => {
+      const user = userEvent.setup();
+      givenVideosState();
+      render(<VideoBrowser />);
+
+      await user.type(screen.getByRole("searchbox"), "zzzz no such video");
+
+      const region = screen.getByRole("region", { name: "Video results" });
+
+      expect(
+        within(region).getByText("No videos were found")
+      ).toBeInTheDocument();
+      expect(screen.queryByRole("listitem")).not.toBeInTheDocument();
+    });
+
+    it("filters by year", async () => {
+      const user = userEvent.setup();
+      givenVideosState();
+      render(<VideoBrowser />);
+
+      await user.selectOptions(screen.getByRole("combobox"), "2014");
+
+      expect(screen.getAllByRole("listitem")).toHaveLength(1);
+      expect(screen.getByText("All In")).toBeInTheDocument();
+    });
+
+    it("filters by genre", async () => {
+      const user = userEvent.setup();
+      givenVideosState();
+      render(<VideoBrowser />);
+
+      await user.click(screen.getByRole("button", { expanded: false }));
+      await user.click(screen.getByRole("checkbox", { name: "Rock" }));
+      await user.keyboard("{Escape}");
+
+      expect(screen.getAllByRole("listitem")).toHaveLength(1);
+      expect(
+        screen.getByText("Single Ladies (Put a Ring on It)")
+      ).toBeInTheDocument();
+    });
+
+    it("combines all three filters with AND", async () => {
+      const user = userEvent.setup();
+      givenVideosState();
+      render(<VideoBrowser />);
+
+      await user.type(screen.getByRole("searchbox"), "beyonce");
+      await user.selectOptions(screen.getByRole("combobox"), "2008");
+      await user.click(screen.getByRole("button", { expanded: false }));
+      await user.click(screen.getByRole("checkbox", { name: "Rock" }));
+      await user.keyboard("{Escape}");
+
+      expect(screen.getAllByRole("listitem")).toHaveLength(1);
+    });
+
+    it("returns nothing when the filters contradict each other", async () => {
+      const user = userEvent.setup();
+      givenVideosState();
+      render(<VideoBrowser />);
+
+      // Year first: typing first would narrow 2014 out of the options entirely,
+      // which is the dynamic-options behaviour rather than a contradiction.
+      await user.selectOptions(screen.getByRole("combobox"), "2014");
+      await user.type(screen.getByRole("searchbox"), "beyonce");
+
+      expect(screen.queryByRole("listitem")).not.toBeInTheDocument();
+    });
+
+    it("announces the filtered count, not the total", async () => {
+      const user = userEvent.setup();
+      givenVideosState();
+      render(<VideoBrowser />);
+
+      await user.type(screen.getByRole("searchbox"), "beyonce");
+
+      expect(getLiveRegion()).toHaveTextContent("1 video found");
+    });
+
+    it("announces the empty result", async () => {
+      const user = userEvent.setup();
+      givenVideosState();
+      render(<VideoBrowser />);
+
+      await user.type(screen.getByRole("searchbox"), "zzzz");
+
+      expect(getLiveRegion()).toHaveTextContent("No videos were found");
+    });
+
+    it("narrows the year options to what the search can return", async () => {
+      const user = userEvent.setup();
+      givenVideosState();
+      render(<VideoBrowser />);
+
+      await user.type(screen.getByRole("searchbox"), "beyonce");
+
+      expect(
+        screen.getAllByRole("option").map((option) => option.textContent)
+      ).toEqual(["All years", "2008"]);
+    });
+
+    it("keeps a chosen year listed once the search excludes it", async () => {
+      const user = userEvent.setup();
+      givenVideosState();
+      render(<VideoBrowser />);
+
+      await user.selectOptions(screen.getByRole("combobox"), "2014");
+      await user.type(screen.getByRole("searchbox"), "beyonce");
+
+      // The select must never hold a value it does not offer.
+      expect(screen.getByRole("combobox")).toHaveValue("2014");
+      expect(
+        screen.getAllByRole("option").map((option) => option.textContent)
+      ).toContain("2014");
+    });
+
+    it("has no accessibility violations with the empty state showing", async () => {
+      const user = userEvent.setup();
+      givenVideosState();
+      const { container } = render(<VideoBrowser />);
+
+      await user.type(screen.getByRole("searchbox"), "zzzz");
+
+      await expect(axe(container)).resolves.toHaveNoViolations();
+    });
+  });
+
   describe("while loading", () => {
     it("marks the region busy and announces progress", () => {
       givenVideosState({ isLoading: true, videos: [] });

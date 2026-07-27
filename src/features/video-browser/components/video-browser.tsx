@@ -1,7 +1,5 @@
 "use client";
 
-import { useMemo, useState } from "react";
-
 import {
   EMPTY_STATE_MESSAGE,
   EmptyState,
@@ -11,9 +9,9 @@ import { HeaderPanel } from "~/features/video-browser/components/header-panel";
 import { SkipLink } from "~/features/video-browser/components/skip-link";
 import { VideoCardList } from "~/features/video-browser/components/video-card-list";
 import { VideoCardSkeletonGrid } from "~/features/video-browser/components/video-card-skeleton-grid";
+import { useVideoFilters } from "~/features/video-browser/hooks/use-video-filters";
 import { useVideos } from "~/features/video-browser/hooks/use-videos";
-import type { Video, VideoFilters } from "~/features/video-browser/types";
-import { deriveFilterOptions } from "~/features/video-browser/utils/derive-filter-options";
+import type { Video } from "~/features/video-browser/types";
 
 const RESULTS_REGION_ID = "video-results";
 
@@ -84,16 +82,15 @@ function Results({
 
 export function VideoBrowser(): React.ReactNode {
   const { videos, isLoading, error, retry } = useVideos();
-
-  // Interim home for the filter values so the controls are operable. The reducer
-  // that owns them arrives with the filtering logic itself.
-  const [filters, setFilters] = useState<VideoFilters>({
-    query: "",
-    year: null,
-    genreIds: [],
-  });
-
-  const options = useMemo(() => deriveFilterOptions(videos), [videos]);
+  const {
+    filters,
+    results,
+    options,
+    setQuery,
+    selectYear,
+    toggleGenre,
+    clearGenres,
+  } = useVideoFilters(videos);
 
   return (
     <div className="relative mx-auto flex h-dvh w-full max-w-5xl flex-col">
@@ -104,25 +101,19 @@ export function VideoBrowser(): React.ReactNode {
         year={filters.year}
         selectedGenreIds={filters.genreIds}
         options={options}
-        onQueryChange={(query) =>
-          setFilters((current) => ({ ...current, query }))
-        }
-        onYearChange={(year) => setFilters((current) => ({ ...current, year }))}
-        onGenreToggle={(genreId) =>
-          setFilters((current) => ({
-            ...current,
-            genreIds: current.genreIds.includes(genreId)
-              ? current.genreIds.filter((id) => id !== genreId)
-              : [...current.genreIds, genreId],
-          }))
-        }
-        onGenresClear={() =>
-          setFilters((current) => ({ ...current, genreIds: [] }))
-        }
+        onQueryChange={setQuery}
+        onYearChange={selectYear}
+        onGenreToggle={toggleGenre}
+        onGenresClear={clearGenres}
       />
 
+      {/*
+        Counts the filtered results. Because the hook defers the query, this
+        settles once typing pauses instead of firing on every keystroke, which
+        would make the announcement unusable.
+      */}
       <p aria-live="polite" aria-atomic="true" className="sr-only">
-        {getAnnouncement(isLoading, Boolean(error), videos.length)}
+        {getAnnouncement(isLoading, Boolean(error), results.length)}
       </p>
 
       <div
@@ -140,7 +131,7 @@ export function VideoBrowser(): React.ReactNode {
         */}
         <div className="px-4 pt-1 pb-4">
           <Results
-            videos={videos}
+            videos={results}
             isLoading={isLoading}
             error={error}
             onRetry={retry}
