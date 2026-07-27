@@ -41,3 +41,15 @@ export interface VideosResponse {
   videos: Video[];
   genres: Genre[];
 }
+
+/**
+ * The choices offered by the year and genre controls. Derived from a set of
+ * videos rather than from the raw `genres` table, so an option can never produce
+ * zero results.
+ */
+export interface FilterOptions {
+  /** Newest first. */
+  years: number[];
+  /** Alphabetical. */
+  genres: Genre[];
+}
