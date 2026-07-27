@@ -8,6 +8,7 @@ import {
   type UseVideosResult,
 } from "~/features/video-browser/hooks/use-videos";
 import { videos } from "~/features/video-browser/test/fixtures/videos";
+import type { Video } from "~/features/video-browser/types";
 
 jest.mock("~/features/video-browser/hooks/use-videos", () => ({
   useVideos: jest.fn(),
@@ -30,6 +31,22 @@ function givenVideosState(overrides: Partial<UseVideosResult> = {}): void {
 
 function goTo(search: string): void {
   window.history.replaceState(null, "", `/${search}`);
+}
+
+/** Enough videos to need more than one page. */
+function makeVideos(count: number): Array<Video> {
+  const [template] = videos;
+
+  if (!template) {
+    throw new Error("The video fixture is empty");
+  }
+
+  return Array.from({ length: count }, (_, index) => ({
+    ...template,
+    id: 900000 + index,
+    title: `Video ${index}`,
+    searchTitle: `video ${index}`,
+  }));
 }
 
 beforeEach(() => {
@@ -178,6 +195,97 @@ describe("VideoBrowser", () => {
 
       expect(screen.getByRole("checkbox", { name: "Pop" })).not.toBeChecked();
       expect(screen.getByRole("checkbox", { name: "Rock" })).not.toBeChecked();
+    });
+  });
+
+  describe("pagination", () => {
+    it("renders only the first twelve videos", () => {
+      givenVideosState({ videos: makeVideos(30) });
+      render(<VideoBrowser />);
+
+      expect(screen.getAllByRole("listitem")).toHaveLength(12);
+    });
+
+    it("offers to load the next page and says how many remain", () => {
+      givenVideosState({ videos: makeVideos(30) });
+      render(<VideoBrowser />);
+
+      expect(
+        screen.getByRole("button", { name: "Load 12 more videos" })
+      ).toBeInTheDocument();
+      expect(screen.getByText("18 videos remaining")).toBeInTheDocument();
+    });
+
+    it("appends the next page without losing the previous one", async () => {
+      const user = userEvent.setup();
+      givenVideosState({ videos: makeVideos(30) });
+      render(<VideoBrowser />);
+
+      await user.click(screen.getByRole("button", { name: /Load 12 more/ }));
+
+      expect(screen.getAllByRole("listitem")).toHaveLength(24);
+      expect(screen.getByText("Video 0")).toBeInTheDocument();
+      expect(screen.getByText("Video 23")).toBeInTheDocument();
+    });
+
+    it("offers only what is left on the final page", async () => {
+      const user = userEvent.setup();
+      givenVideosState({ videos: makeVideos(20) });
+      render(<VideoBrowser />);
+
+      expect(
+        screen.getByRole("button", { name: "Load 8 more videos" })
+      ).toBeInTheDocument();
+
+      await user.click(screen.getByRole("button", { name: /Load 8 more/ }));
+
+      expect(screen.getAllByRole("listitem")).toHaveLength(20);
+    });
+
+    it("removes the control once everything is shown", async () => {
+      const user = userEvent.setup();
+      givenVideosState({ videos: makeVideos(20) });
+      render(<VideoBrowser />);
+
+      await user.click(screen.getByRole("button", { name: /Load 8 more/ }));
+
+      expect(
+        screen.queryByRole("button", { name: /Load .* more/ })
+      ).not.toBeInTheDocument();
+    });
+
+    it("shows no control when everything fits on one page", () => {
+      givenVideosState({ videos: makeVideos(5) });
+      render(<VideoBrowser />);
+
+      expect(screen.getAllByRole("listitem")).toHaveLength(5);
+      expect(
+        screen.queryByRole("button", { name: /Load .* more/ })
+      ).not.toBeInTheDocument();
+    });
+
+    it("announces both what is shown and what matched", () => {
+      givenVideosState({ videos: makeVideos(30) });
+      render(<VideoBrowser />);
+
+      expect(getLiveRegion()).toHaveTextContent("Showing 12 of 30 videos");
+    });
+
+    it("announces the plain total once nothing is held back", async () => {
+      const user = userEvent.setup();
+      givenVideosState({ videos: makeVideos(20) });
+      render(<VideoBrowser />);
+
+      await user.click(screen.getByRole("button", { name: /Load 8 more/ }));
+
+      expect(getLiveRegion()).toHaveTextContent("20 videos found");
+    });
+
+    it("has no accessibility violations while a page is held back", async () => {
+      givenVideosState({ videos: makeVideos(30) });
+      const { container } = render(<VideoBrowser />);
+
+      await expect(axe(container)).resolves.toHaveNoViolations();
     });
   });
 
@@ -372,6 +480,20 @@ describe("VideoBrowser", () => {
           within(region).getByText("No videos were found")
         ).toBeInTheDocument();
       });
+    });
+
+    it("resets to the first page when a filter changes", async () => {
+      const user = userEvent.setup();
+      givenVideosState({ videos: makeVideos(30) });
+      render(<VideoBrowser />);
+
+      await user.click(screen.getByRole("button", { name: /Load 12 more/ }));
+      expect(screen.getAllByRole("listitem")).toHaveLength(24);
+
+      // Matches all 30, so the change is purely the reset.
+      await user.type(screen.getByRole("searchbox"), "video");
+
+      expect(screen.getAllByRole("listitem")).toHaveLength(12);
     });
 
     it("has no accessibility violations with the empty state showing", async () => {

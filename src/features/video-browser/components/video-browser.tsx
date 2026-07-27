@@ -6,6 +6,7 @@ import {
 } from "~/features/video-browser/components/empty-state";
 import { ErrorState } from "~/features/video-browser/components/error-state";
 import { HeaderPanel } from "~/features/video-browser/components/header-panel";
+import { LoadMore } from "~/features/video-browser/components/load-more";
 import { SkipLink } from "~/features/video-browser/components/skip-link";
 import { VideoCardList } from "~/features/video-browser/components/video-card-list";
 import { VideoCardSkeletonGrid } from "~/features/video-browser/components/video-card-skeleton-grid";
@@ -13,9 +14,14 @@ import {
   useFilterUrlSync,
   useRestoreFiltersFromUrl,
 } from "~/features/video-browser/hooks/use-filter-url";
+import {
+  PAGE_SIZE,
+  usePaginatedList,
+} from "~/features/video-browser/hooks/use-paginated-list";
 import { useVideoFilters } from "~/features/video-browser/hooks/use-video-filters";
 import { useVideos } from "~/features/video-browser/hooks/use-videos";
 import type { Video } from "~/features/video-browser/types";
+import { serializeFilters } from "~/features/video-browser/utils/filter-url";
 
 const RESULTS_REGION_ID = "video-results";
 
@@ -27,15 +33,27 @@ function formatResultCount(count: number): string {
   return count === 1 ? "1 video found" : `${count} videos found`;
 }
 
+interface AnnouncementInput {
+  isLoading: boolean;
+  hasError: boolean;
+  shown: number;
+  total: number;
+}
+
 /**
  * What the live region says. Errors are excluded because `ErrorState` already
  * carries `role="alert"`, and announcing the same failure twice is worse than once.
+ *
+ * When results are paginated it reports both numbers. Announcing only the total
+ * would imply everything is on the page; announcing only what is rendered would
+ * hide that more matched.
  */
-function getAnnouncement(
-  isLoading: boolean,
-  hasError: boolean,
-  count: number
-): string {
+function getAnnouncement({
+  isLoading,
+  hasError,
+  shown,
+  total,
+}: AnnouncementInput): string {
   if (hasError) {
     return "";
   }
@@ -44,25 +62,36 @@ function getAnnouncement(
     return LOADING_ANNOUNCEMENT;
   }
 
-  if (count === 0) {
+  if (total === 0) {
     return EMPTY_STATE_MESSAGE;
   }
 
-  return formatResultCount(count);
+  if (shown < total) {
+    return `Showing ${shown} of ${total} videos`;
+  }
+
+  return formatResultCount(total);
 }
 
 interface ResultsProps {
+  /** The page currently revealed, not every match. */
   videos: Array<Video>;
+  remaining: number;
+  hasMore: boolean;
   isLoading: boolean;
   error: Error | undefined;
   onRetry: () => void;
+  onLoadMore: () => void;
 }
 
 function Results({
   videos,
+  remaining,
+  hasMore,
   isLoading,
   error,
   onRetry,
+  onLoadMore,
 }: ResultsProps): React.ReactNode {
   if (error) {
     return (
@@ -81,7 +110,18 @@ function Results({
     return <EmptyState />;
   }
 
-  return <VideoCardList videos={videos} />;
+  return (
+    <>
+      <VideoCardList videos={videos} />
+      {hasMore ? (
+        <LoadMore
+          remaining={remaining}
+          nextPageSize={Math.min(remaining, PAGE_SIZE)}
+          onLoadMore={onLoadMore}
+        />
+      ) : null}
+    </>
+  );
 }
 
 export function VideoBrowser(): React.ReactNode {
@@ -101,6 +141,16 @@ export function VideoBrowser(): React.ReactNode {
   // change, so a filtered view can be shared and survives a reload.
   useRestoreFiltersFromUrl(replaceAll);
   useFilterUrlSync(filters);
+
+  /*
+   * The serialised filters double as the pagination reset key: whenever they
+   * change the result set is different, so browsing should start again from the
+   * first page rather than leaving the user deep in a previous one.
+   */
+  const { visible, remaining, hasMore, loadMore } = usePaginatedList(
+    results,
+    serializeFilters(filters)
+  );
 
   return (
     // No max width here: the header is full-bleed so its rule spans the viewport,
@@ -125,7 +175,12 @@ export function VideoBrowser(): React.ReactNode {
         would make the announcement unusable.
       */}
       <p aria-live="polite" aria-atomic="true" className="sr-only">
-        {getAnnouncement(isLoading, Boolean(error), results.length)}
+        {getAnnouncement({
+          isLoading,
+          hasError: Boolean(error),
+          shown: visible.length,
+          total: results.length,
+        })}
       </p>
 
       <div
@@ -145,10 +200,13 @@ export function VideoBrowser(): React.ReactNode {
       >
         <div className="px-4 pt-4 pb-8">
           <Results
-            videos={results}
+            videos={visible}
+            remaining={remaining}
+            hasMore={hasMore}
             isLoading={isLoading}
             error={error}
             onRetry={retry}
+            onLoadMore={loadMore}
           />
         </div>
       </div>
