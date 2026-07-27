@@ -56,14 +56,34 @@ describe("VideoBrowser", () => {
     ).toBeInTheDocument();
   });
 
-  it("puts the results in a focusable, labelled scroll region", () => {
+  it("labels the results as a region without adding a tab stop", () => {
     givenVideosState();
     render(<VideoBrowser />);
 
     const region = screen.getByRole("region", { name: "Video results" });
 
-    // Without a tab stop, keyboard users cannot scroll an overflow container.
-    expect(region).toHaveAttribute("tabindex", "0");
+    // The page scrolls, so arrow keys already work; -1 keeps the region
+    // programmatically focusable for the skip link without a pointless tab stop.
+    expect(region).toHaveAttribute("tabindex", "-1");
+  });
+
+  it("does not put the results region in the tab order", async () => {
+    const user = userEvent.setup();
+    givenVideosState();
+    render(<VideoBrowser />);
+
+    await user.tab(); // skip link
+    await user.tab(); // search
+    await user.tab(); // year
+    await user.tab(); // genre trigger
+
+    expect(screen.getByRole("button", { expanded: false })).toHaveFocus();
+
+    await user.tab();
+
+    expect(
+      screen.getByRole("region", { name: "Video results" })
+    ).not.toHaveFocus();
   });
 
   describe("filter controls", () => {

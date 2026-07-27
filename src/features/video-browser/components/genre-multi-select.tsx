@@ -73,7 +73,9 @@ export function GenreMultiSelect({
           align="start"
           sideOffset={2}
           aria-label={GENRE_PANEL_LABEL}
-          className="border-control bg-surface data-[state=open]:animate-panel-enter z-10 flex max-h-72 w-56 flex-col border shadow-md motion-reduce:animate-none"
+          // z-30 clears the sticky header (z-20); the panel opens from a trigger
+          // inside it, so a lower value would paint its top edge underneath.
+          className="border-control bg-surface data-[state=open]:animate-panel-enter z-30 flex max-h-72 w-56 flex-col border shadow-md motion-reduce:animate-none"
         >
           {/*
             Only the option list scrolls. With the whole panel scrolling, the

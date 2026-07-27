@@ -32,7 +32,11 @@ export function HeaderPanel({
   onGenresClear,
 }: HeaderPanelProps): React.ReactNode {
   return (
-    <header className="border-hairline shrink-0 border-b px-4 pt-5 pb-4">
+    <header
+      // Sticks while the page scrolls. The background must be opaque or cards
+      // would show through as they pass underneath.
+      className="border-hairline bg-surface sticky top-0 z-20 border-b px-4 pt-5 pb-4"
+    >
       <h1 className="text-ink text-center text-xl font-bold tracking-tight">
         {APP_TITLE}
       </h1>

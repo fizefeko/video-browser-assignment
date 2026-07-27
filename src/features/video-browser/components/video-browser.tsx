@@ -103,7 +103,7 @@ export function VideoBrowser(): React.ReactNode {
   useFilterUrlSync(filters);
 
   return (
-    <div className="relative mx-auto flex h-dvh w-full max-w-5xl flex-col">
+    <div className="relative mx-auto w-full max-w-5xl">
       <SkipLink targetId={RESULTS_REGION_ID}>Skip to results</SkipLink>
 
       <HeaderPanel
@@ -128,18 +128,20 @@ export function VideoBrowser(): React.ReactNode {
 
       <div
         id={RESULTS_REGION_ID}
-        // A scroll container is not keyboard-scrollable unless it can take focus.
-        tabIndex={0}
+        // -1, not 0: the page itself scrolls now, so arrow keys and Page Down
+        // already work without a tab stop here. It stays programmatically
+        // focusable so the skip link actually moves focus rather than only
+        // scrolling, which would leave the next Tab back up in the header.
+        tabIndex={-1}
         role="region"
         aria-label="Video results"
         aria-busy={isLoading}
-        className="focus-visible:outline-ink flex-1 overflow-y-auto focus-visible:outline-2 focus-visible:-outline-offset-2"
+        // scroll-mt clears the sticky header: without it, following the skip link
+        // scrolls this region to the very top of the viewport and the header covers
+        // the first row of cards.
+        className="focus-visible:outline-ink scroll-mt-32 focus-visible:outline-2 focus-visible:-outline-offset-2"
       >
-        {/*
-          Padding sits on the content, not the scroll container, so the scrollbar
-          stays flush to the edge while the cards line up with the header.
-        */}
-        <div className="px-4 pt-1 pb-4">
+        <div className="px-4 pt-4 pb-8">
           <Results
             videos={results}
             isLoading={isLoading}

@@ -16,7 +16,9 @@ export function SkipLink({
   return (
     <a
       href={`#${targetId}`}
-      className="bg-surface text-ink outline-ink sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-20 focus:px-3 focus:py-2 focus:text-xs focus:outline-2"
+      // z-50 so it clears the sticky header. At an equal z-index the header would
+      // win on DOM order and the focused link would be invisible.
+      className="bg-surface text-ink outline-ink sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:px-3 focus:py-2 focus:text-xs focus:outline-2"
     >
       {children}
     </a>
