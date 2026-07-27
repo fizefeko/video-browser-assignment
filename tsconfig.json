@@ -1,11 +1,7 @@
 {
   "compilerOptions": {
     "target": "es5",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
+    "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": false,
     "skipLibCheck": true,
     "strict": true,
@@ -25,12 +21,8 @@
     ],
     "baseUrl": "./",
     "paths": {
-      "~/*": [
-        "./src/*"
-      ],
-      "storybook/constants": [
-        "./.storybook/constants/index.ts"
-      ]
+      "~/*": ["./src/*"],
+      "storybook/constants": ["./.storybook/constants/index.ts"]
     }
   },
   "include": [
@@ -42,8 +34,5 @@
     "src/features/search/types/fetch-search-as-you-type-params",
     ".next/dev/types/**/*.ts"
   ],
-  "exclude": [
-    "node_modules",
-    "**/*.stories.ts"
-  ]
+  "exclude": ["node_modules", "**/*.stories.ts"]
 }
