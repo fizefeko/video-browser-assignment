@@ -74,6 +74,12 @@ async function getYearOptions(
   return labels;
 }
 
+/**
+ * Matches only the visible count line — "30 videos", "1 of 4 videos" — and not the
+ * live region's "Loading videos", which also ends in the word.
+ */
+const COUNT_PATTERN = /^\d+( of \d+)? videos?$/u;
+
 function getLiveRegion(): HTMLElement {
   const region = document.querySelector("[aria-live='polite']");
 
@@ -217,6 +223,56 @@ describe("VideoBrowser", () => {
 
       expect(screen.getByRole("checkbox", { name: "Pop" })).not.toBeChecked();
       expect(screen.getByRole("checkbox", { name: "Rock" })).not.toBeChecked();
+    });
+  });
+
+  describe("visible result count", () => {
+    it("states the catalogue size when nothing is filtered", () => {
+      givenVideosState({ videos: makeVideos(30) });
+      render(<VideoBrowser />);
+
+      expect(screen.getByText("30 videos")).toBeInTheDocument();
+    });
+
+    it("shows how many matched out of the whole catalogue", async () => {
+      const user = userEvent.setup();
+      givenVideosState();
+      render(<VideoBrowser />);
+
+      await user.type(screen.getByRole("searchbox"), "beyonce");
+
+      expect(screen.getByText("1 of 4 videos")).toBeInTheDocument();
+    });
+
+    it("keeps the noun agreeing with the catalogue, not the match count", () => {
+      givenVideosState({ videos: makeVideos(1) });
+      render(<VideoBrowser />);
+
+      expect(screen.getByText("1 video")).toBeInTheDocument();
+    });
+
+    it("reports zero matches rather than going blank", async () => {
+      const user = userEvent.setup();
+      givenVideosState();
+      render(<VideoBrowser />);
+
+      await user.type(screen.getByRole("searchbox"), "zzzz");
+
+      expect(screen.getByText("0 of 4 videos")).toBeInTheDocument();
+    });
+
+    it("stays out of the way while loading", () => {
+      givenVideosState({ isLoading: true, videos: [] });
+      render(<VideoBrowser />);
+
+      expect(screen.queryByText(COUNT_PATTERN)).not.toBeInTheDocument();
+    });
+
+    it("stays out of the way on failure", () => {
+      givenVideosState({ error: new Error("boom"), videos: [] });
+      render(<VideoBrowser />);
+
+      expect(screen.queryByText(COUNT_PATTERN)).not.toBeInTheDocument();
     });
   });
 

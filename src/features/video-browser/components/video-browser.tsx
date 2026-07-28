@@ -33,6 +33,19 @@ function formatResultCount(count: number): string {
   return count === 1 ? "1 video found" : `${count} videos found`;
 }
 
+/**
+ * The count shown on screen. Says how many matched out of the whole catalogue, so
+ * the effect of a filter is legible without scrolling to the end of the grid.
+ */
+function formatCountSummary(matched: number, catalogue: number): string {
+  // The noun agrees with the catalogue, not the match count: "1 of 4 videos".
+  const noun = catalogue === 1 ? "video" : "videos";
+
+  return matched === catalogue
+    ? `${catalogue} ${noun}`
+    : `${matched} of ${catalogue} ${noun}`;
+}
+
 interface AnnouncementInput {
   isLoading: boolean;
   hasError: boolean;
@@ -199,6 +212,19 @@ export function VideoBrowser(): React.ReactNode {
         className="focus-visible:outline-ink mx-auto w-full max-w-5xl scroll-mt-32 focus-visible:outline-2 focus-visible:-outline-offset-2"
       >
         <div className="px-4 pt-4 pb-8">
+          {/*
+            The matched count, on screen rather than only announced. Until now it
+            existed solely in the live region, so a filter's effect was invisible to
+            anyone not using a screen reader. Left readable rather than
+            aria-hidden — the mild overlap with the live region is preferable to
+            hiding real content.
+          */}
+          {!isLoading && !error ? (
+            <p className="text-ink-muted pb-3 text-center text-xs">
+              {formatCountSummary(results.length, videos.length)}
+            </p>
+          ) : null}
+
           <Results
             videos={visible}
             remaining={remaining}
